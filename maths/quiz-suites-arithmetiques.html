@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz — Suites arithmétiques</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --text: #1c2530;
+    --text-muted: #5c6773;
+    --accent: #2a6f97;
+    --accent-dark: #1c4e6b;
+    --good: #2e7d32;
+    --good-bg: #e8f5e9;
+    --bad: #c62828;
+    --bad-bg: #fdecea;
+    --border: #dfe4ea;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181d;
+      --card-bg: #1e242b;
+      --text: #eaeef2;
+      --text-muted: #9aa5b1;
+      --accent: #5ba3d0;
+      --accent-dark: #7fc0e8;
+      --good: #6fcf73;
+      --good-bg: #1c3a20;
+      --bad: #f28b82;
+      --bad-bg: #3a1f1e;
+      --border: #2c333c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181d;
+    --card-bg: #1e242b;
+    --text: #eaeef2;
+    --text-muted: #9aa5b1;
+    --accent: #5ba3d0;
+    --accent-dark: #7fc0e8;
+    --good: #6fcf73;
+    --good-bg: #1c3a20;
+    --bad: #f28b82;
+    --bad-bg: #3a1f1e;
+    --border: #2c333c;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100%;
+    padding: 20px 14px 40px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  header h1 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+    color: var(--accent-dark);
+  }
+  header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 14px 0 22px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .q-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .q-text {
+    font-size: 1.08rem;
+    line-height: 1.5;
+    margin: 0 0 16px;
+  }
+  .q-text .math {
+    font-style: italic;
+    color: var(--accent-dark);
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .option:active { transform: scale(0.99); }
+  .option.correct {
+    border-color: var(--good);
+    background: var(--good-bg);
+    color: var(--good);
+    font-weight: 600;
+  }
+  .option.incorrect {
+    border-color: var(--bad);
+    background: var(--bad-bg);
+    color: var(--bad);
+    font-weight: 600;
+  }
+  .option[disabled] { cursor: default; }
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--good-bg); color: var(--good); }
+  .feedback.bad { background: var(--bad-bg); color: var(--bad); }
+  .nav-row {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  button.next-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  button.next-btn.ready { opacity: 1; pointer-events: auto; }
+  .result-card { text-align: center; padding: 30px 20px; }
+  .result-score {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--accent-dark);
+    margin: 6px 0;
+  }
+  .result-msg { color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem; }
+  .restart-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .recap {
+    text-align: left;
+    margin-top: 24px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .recap-item {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 0.88rem;
+    align-items: flex-start;
+  }
+  .recap-item .mark { font-weight: 700; flex-shrink: 0; }
+  .recap-item.ok .mark { color: var(--good); }
+  .recap-item.ko .mark { color: var(--bad); }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour aux quiz</a>
+  <header>
+    <h1>Quiz — Les suites arithmétiques</h1>
+    <p>1ère Bac Professionnel · 8 questions</p>
+  </header>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="quizCard"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Une suite (u<sub>n</sub>) est arithmétique de raison r. Que doit-on faire à un terme pour obtenir le suivant ?",
+    options: ["Lui ajouter r", "Le multiplier par r", "Lui soustraire r à chaque fois", "Le diviser par r"],
+    correct: 0,
+    explain: "Par définition, pour une suite arithmétique : u<sub>n+1</sub> = u<sub>n</sub> + r. On ajoute toujours la raison r."
+  },
+  {
+    q: "On donne les 4 premiers termes d'une suite : 5 ; 8 ; 11 ; 14. Quelle est sa raison ?",
+    options: ["r = 2", "r = 3", "r = 5", "r = 14"],
+    correct: 1,
+    explain: "On calcule la différence entre deux termes consécutifs : 8 − 5 = 3, 11 − 8 = 3, 14 − 11 = 3. Donc r = 3."
+  },
+  {
+    q: "Une suite arithmétique a pour premier terme u<sub>1</sub> = 7 et pour raison r = 4. Quelle est la valeur de u<sub>2</sub> ?",
+    options: ["u₂ = 11", "u₂ = 28", "u₂ = 3", "u₂ = 7"],
+    correct: 0,
+    explain: "u₂ = u₁ + r = 7 + 4 = 11."
+  },
+  {
+    q: "Quelle est la formule explicite (en fonction de n) du terme général d'une suite arithmétique de premier terme u<sub>1</sub> et de raison r ?",
+    options: ["u<sub>n</sub> = u₁ × r<sup>n</sup>", "u<sub>n</sub> = u₁ + (n − 1) × r", "u<sub>n</sub> = n × u₁ + r", "u<sub>n</sub> = u₁ + r<sup>n</sup>"],
+    correct: 1,
+    explain: "La formule explicite d'une suite arithmétique (indexée à partir de u₁) est u<sub>n</sub> = u₁ + (n − 1) × r, ce qui permet de calculer n'importe quel terme sans connaître les précédents."
+  },
+  {
+    q: "Une suite arithmétique a pour premier terme u₁ = 2 et pour raison r = 5. Quelle est la valeur de u₇ ?",
+    options: ["u₇ = 32", "u₇ = 30", "u₇ = 7", "u₇ = 37"],
+    correct: 0,
+    explain: "u₇ = u₁ + (7 − 1) × r = 2 + 6 × 5 = 2 + 30 = 32."
+  },
+  {
+    q: "Parmi ces suites, laquelle N'EST PAS arithmétique ?",
+    options: ["2 ; 5 ; 8 ; 11 ; 14", "1 ; 2 ; 4 ; 8 ; 16", "10 ; 7 ; 4 ; 1 ; -2", "0 ; 3 ; 6 ; 9 ; 12"],
+    correct: 1,
+    explain: "1 ; 2 ; 4 ; 8 ; 16 est une suite géométrique (chaque terme est multiplié par 2), pas arithmétique. Les autres ont bien une différence constante entre termes consécutifs."
+  },
+  {
+    q: "Un technicien facture 45 € pour le déplacement, puis 20 € par heure de travail. Le prix après n heures suit une suite arithmétique. Quelle est sa raison ?",
+    options: ["r = 45", "r = 20", "r = 65", "r = 25"],
+    correct: 1,
+    explain: "Chaque heure supplémentaire ajoute 20 € au prix total : la raison de cette suite arithmétique est donc r = 20 (le 45 € est le premier terme, le prix de départ)."
+  },
+  {
+    q: "Une suite arithmétique a pour raison r = -3 et pour premier terme u₁ = 50. À partir de quel terme la valeur devient-elle négative ?",
+    options: ["u₁₈ (n = 18)", "u₁₇ (n = 17)", "u₁₆ (n = 16)", "u₂₀ (n = 20)"],
+    correct: 0,
+    explain: "u<sub>n</sub> = u₁ + (n − 1) × r = 50 − 3(n − 1) = 53 − 3n. On cherche le plus petit n tel que 53 − 3n < 0, soit n > 53/3 ≈ 17,67. Le plus petit entier n qui convient est donc n = 18 : u₁₈ = 53 − 54 = -1 (alors que u₁₇ = 53 − 51 = 2 est encore positif)."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answers = [];
+
+function renderQuestion() {
+  const card = document.getElementById('quizCard');
+  const item = questions[current];
+  document.getElementById('progressFill').style.width = ((current) / questions.length * 100) + '%';
+
+  card.innerHTML = `
+    <div class="q-count">Question ${current + 1} / ${questions.length}</div>
+    <p class="q-text">${item.q}</p>
+    <div class="options" id="optionsWrap">
+      ${item.options.map((opt, i) => `<button class="option" data-i="${i}">${opt}</button>`).join('')}
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nav-row"><button class="next-btn" id="nextBtn">Suivant →</button></div>
+  `;
+
+  const optionButtons = card.querySelectorAll('.option');
+  optionButtons.forEach(btn => {
+    btn.addEventListener('click', () => handleAnswer(parseInt(btn.dataset.i), optionButtons, item));
+  });
+}
+
+function handleAnswer(selectedIndex, optionButtons, item) {
+  optionButtons.forEach(b => b.disabled = true);
+  const isCorrect = selectedIndex === item.correct;
+  if (isCorrect) score++;
+  answers.push({ q: item.q, selected: item.options[selectedIndex], correct: item.options[item.correct], isCorrect });
+
+  optionButtons[selectedIndex].classList.add(isCorrect ? 'correct' : 'incorrect');
+  if (!isCorrect) optionButtons[item.correct].classList.add('correct');
+
+  const fb = document.getElementById('feedback');
+  fb.classList.add('show', isCorrect ? 'good' : 'bad');
+  fb.innerHTML = (isCorrect ? "✓ Correct ! " : "✗ Pas tout à fait. ") + item.explain;
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.classList.add('ready');
+  nextBtn.textContent = current === questions.length - 1 ? "Voir mon score →" : "Suivant →";
+  nextBtn.onclick = () => {
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  };
+}
+
+function renderResult() {
+  document.getElementById('progressFill').style.width = '100%';
+  const pct = Math.round((score / questions.length) * 100);
+  let msg;
+  if (pct >= 85) msg = "Excellent ! Les suites arithmétiques n'ont plus de secret pour toi.";
+  else if (pct >= 60) msg = "Bon travail, quelques notions sont encore à consolider.";
+  else msg = "Ce n'est pas encore acquis, revois la définition et la formule u_n = u0 + n×r.";
+
+  const card = document.getElementById('quizCard');
+  card.innerHTML = `
+    <div class="result-card">
+      <div class="q-count">Résultat</div>
+      <div class="result-score">${score} / ${questions.length}</div>
+      <div class="result-msg">${msg}</div>
+      <button class="restart-btn" id="restartBtn">Recommencer</button>
+      <div class="recap" id="recap"></div>
+    </div>
+  `;
+  const recap = document.getElementById('recap');
+  recap.innerHTML = answers.map((a, i) => `
+    <div class="recap-item ${a.isCorrect ? 'ok' : 'ko'}">
+      <span class="mark">${a.isCorrect ? '✓' : '✗'}</span>
+      <span>Q${i + 1}. ${a.isCorrect ? 'Bonne réponse : ' + a.correct : 'Ta réponse : ' + a.selected + ' — Correct : ' + a.correct}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    current = 0; score = 0; answers = [];
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
