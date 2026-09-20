@@ -1,1 +1,473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — La poussée d'Archimède</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card-bg: #ffffff;
+    --text: #1c2330;
+    --text-muted: #5a6270;
+    --accent: #1d6fa5;
+    --accent-dark: #164f77;
+    --correct: #1e8e5a;
+    --correct-bg: #e3f6ec;
+    --wrong: #c0392b;
+    --wrong-bg: #fbeaea;
+    --border: #e0e4ec;
+    --option-bg: #f8f9fc;
+    --option-hover: #eaf1f8;
+    --progress-track: #e2e7f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161f;
+      --card-bg: #1d2030;
+      --text: #eef1f7;
+      --text-muted: #a2a8b8;
+      --accent: #4f9fd8;
+      --accent-dark: #3a7fb0;
+      --correct: #4fd18f;
+      --correct-bg: #163326;
+      --wrong: #f2786b;
+      --wrong-bg: #3a1c1c;
+      --border: #2c3042;
+      --option-bg: #262a3c;
+      --option-hover: #2f3448;
+      --progress-track: #2c3042;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161f;
+    --card-bg: #1d2030;
+    --text: #eef1f7;
+    --text-muted: #a2a8b8;
+    --accent: #4f9fd8;
+    --accent-dark: #3a7fb0;
+    --correct: #4fd18f;
+    --correct-bg: #163326;
+    --wrong: #f2786b;
+    --wrong-bg: #3a1c1c;
+    --border: #2c3042;
+    --option-bg: #262a3c;
+    --option-hover: #2f3448;
+    --progress-track: #2c3042;
+  }
 
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 24px 14px 60px;
+    min-height: 100vh;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 640px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  header h1 {
+    font-size: clamp(1.3rem, 5vw, 1.7rem);
+    margin: 0 0 4px;
+    color: var(--accent-dark);
+  }
+  header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--progress-track);
+    overflow: hidden;
+    margin: 18px 0 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .3s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .qnum {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .question {
+    font-size: 1.08rem;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    font-weight: 600;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--option-bg);
+    color: var(--text);
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .option:hover:not(:disabled) {
+    background: var(--option-hover);
+    border-color: var(--accent);
+  }
+  .option:disabled { cursor: default; }
+  .option.correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: var(--correct);
+    font-weight: 600;
+  }
+  .option.wrong {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: var(--wrong);
+    font-weight: 600;
+  }
+  .explanation {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--option-bg);
+    border-left: 4px solid var(--accent);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .nav-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+  }
+  .nav-btn.show { display: block; }
+  .nav-btn:hover { background: var(--accent-dark); }
+
+  .result-card { text-align: center; }
+  .result-score {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 6px 0 2px;
+  }
+  .result-msg {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+  }
+  .result-list {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 18px 0;
+  }
+  .result-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--option-bg);
+    font-size: 0.88rem;
+  }
+  .result-row .mark { font-weight: 800; flex-shrink: 0; }
+  .result-row.ok .mark { color: var(--correct); }
+  .result-row.ko .mark { color: var(--wrong); }
+  .restart-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: var(--accent-dark); }
+  footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-top: 22px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .back-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour aux quiz</a>
+  <header>
+    <h1>🧪 Quiz — La poussée d'Archimède</h1>
+    <p>Sciences physiques · Première Bac Professionnel</p>
+  </header>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel"></div>
+
+  <div class="card" id="quizCard"></div>
+
+  <footer>Score enregistré uniquement le temps de la session</footer>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Un objet est plongé dans un liquide. Que subit-il de la part du liquide ?",
+    options: [
+      "Une force verticale dirigée vers le haut, appelée poussée d'Archimède",
+      "Une force horizontale qui le pousse sur le côté",
+      "Aucune force particulière",
+      "Une force qui l'attire vers le fond"
+    ],
+    correct: 0,
+    explanation: "Tout corps plongé dans un fluide (liquide ou gaz) subit une force verticale, dirigée vers le haut : la poussée d'Archimède."
+  },
+  {
+    q: "Quelle est l'expression correcte de la poussée d'Archimède Fa ?",
+    options: [
+      "Fa = m × g",
+      "Fa = ρ(fluide) × V(immergé) × g",
+      "Fa = ρ(objet) × V(objet) × g",
+      "Fa = m × V"
+    ],
+    correct: 1,
+    explanation: "Fa = ρ(fluide) × V(immergé) × g, où ρ(fluide) est la masse volumique du fluide (kg/m³), V(immergé) le volume de fluide déplacé (m³) et g l'intensité de la pesanteur (≈ 9,8 N/kg)."
+  },
+  {
+    q: "Dans quelle unité s'exprime la poussée d'Archimède Fa ?",
+    options: ["En kilogrammes (kg)", "En mètres cubes (m³)", "En newtons (N)", "En pascals (Pa)"],
+    correct: 2,
+    explanation: "Fa est une force, elle s'exprime donc en newtons (N), comme le poids."
+  },
+  {
+    q: "La poussée d'Archimède dépend...",
+    options: [
+      "Uniquement de la masse de l'objet",
+      "Du volume immergé de l'objet et de la masse volumique du fluide",
+      "Uniquement de la forme de l'objet",
+      "De la couleur de l'objet"
+    ],
+    correct: 1,
+    explanation: "Fa dépend du volume de fluide déplacé (donc du volume immergé de l'objet) et de la masse volumique du fluide — pas de la masse propre de l'objet."
+  },
+  {
+    q: "Un objet flotte à la surface de l'eau lorsque...",
+    options: [
+      "Son poids est supérieur à la poussée d'Archimède maximale possible",
+      "Sa masse volumique moyenne est supérieure à celle de l'eau",
+      "Sa masse volumique moyenne est inférieure à celle de l'eau",
+      "Il n'est soumis à aucune force"
+    ],
+    correct: 2,
+    explanation: "Un objet flotte si sa masse volumique moyenne est inférieure à celle du liquide : la poussée d'Archimède peut alors équilibrer son poids avant immersion totale."
+  },
+  {
+    q: "Calcul : un objet a un volume immergé de 0,002 m³ dans l'eau (ρ(eau) = 1000 kg/m³, g = 9,8 N/kg). Quelle est la valeur de Fa ?",
+    options: ["1,96 N", "19,6 N", "196 N", "0,0196 N"],
+    correct: 1,
+    explanation: "Fa = ρ × V × g = 1000 × 0,002 × 9,8 = 19,6 N."
+  },
+  {
+    q: "Un bateau en acier flotte alors que l'acier est plus dense que l'eau. Pourquoi ?",
+    options: [
+      "L'acier devient moins dense au contact de l'eau",
+      "La forme creuse du bateau lui donne une masse volumique moyenne inférieure à celle de l'eau",
+      "Le bateau ne subit pas la poussée d'Archimède",
+      "C'est uniquement grâce au moteur du bateau"
+    ],
+    correct: 1,
+    explanation: "Grâce à sa coque creuse, le bateau déplace un grand volume d'eau pour une masse donnée : sa masse volumique moyenne (coque + air) devient inférieure à celle de l'eau, donc il flotte."
+  },
+  {
+    q: "Comment un sous-marin fait-il pour plonger ou remonter ?",
+    options: [
+      "En changeant la température de l'eau autour de lui",
+      "En modifiant ses ballasts (eau/air) pour faire varier sa masse volumique moyenne",
+      "En augmentant la vitesse de ses hélices uniquement",
+      "La poussée d'Archimède ne s'applique pas aux sous-marins"
+    ],
+    correct: 1,
+    explanation: "En remplissant ses ballasts d'eau, le sous-marin augmente sa masse volumique moyenne et plonge ; en les vidant avec de l'air comprimé, il redevient moins dense que l'eau et remonte."
+  },
+  {
+    q: "Entre l'eau salée (ρ ≈ 1025 kg/m³) et l'eau douce (ρ ≈ 1000 kg/m³), pour un même volume immergé, la poussée d'Archimède est...",
+    options: [
+      "Plus grande dans l'eau salée",
+      "Plus grande dans l'eau douce",
+      "Identique dans les deux cas",
+      "Nulle dans l'eau salée"
+    ],
+    correct: 0,
+    explanation: "Fa = ρ(fluide) × V × g : plus le fluide est dense (eau salée), plus la poussée est grande à volume immergé égal. C'est pourquoi on flotte plus facilement en mer que dans une piscine d'eau douce."
+  },
+  {
+    q: "Un objet totalement immergé reste en équilibre (ni ne coule, ni ne remonte) lorsque...",
+    options: [
+      "Son poids est nul",
+      "La poussée d'Archimède est nulle",
+      "Le poids de l'objet est égal à la poussée d'Archimède",
+      "Le poids est très supérieur à la poussée d'Archimède"
+    ],
+    correct: 2,
+    explanation: "L'équilibre (flottabilité neutre) est atteint lorsque le poids P et la poussée d'Archimède Fa se compensent exactement : P = Fa."
+  }
+];
+
+let current = 0;
+let score = 0;
+const userAnswers = [];
+
+const quizCard = document.getElementById('quizCard');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+
+function updateProgress() {
+  const pct = (current / questions.length) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = `Question ${Math.min(current+1, questions.length)} / ${questions.length}`;
+}
+
+function renderQuestion() {
+  updateProgress();
+  const item = questions[current];
+  quizCard.innerHTML = `
+    <span class="qnum">Question ${current + 1}</span>
+    <p class="question">${item.q}</p>
+    <div class="options" id="optionsWrap"></div>
+    <div class="explanation" id="explanation">${item.explanation}</div>
+    <button class="nav-btn" id="nextBtn">${current === questions.length - 1 ? 'Voir mon score' : 'Question suivante'}</button>
+  `;
+  const optionsWrap = document.getElementById('optionsWrap');
+  item.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => selectAnswer(idx));
+    optionsWrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx) {
+  const item = questions[current];
+  const optionButtons = document.querySelectorAll('#optionsWrap .option');
+  optionButtons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === item.correct) btn.classList.add('correct');
+    else if (i === idx) btn.classList.add('wrong');
+  });
+  const isCorrect = idx === item.correct;
+  if (isCorrect) score++;
+  userAnswers.push({ chosen: idx, correct: item.correct, isCorrect });
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'nextBtn') {
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  }
+});
+
+function renderResult() {
+  progressFill.style.width = '100%';
+  progressLabel.textContent = `Terminé — ${questions.length} / ${questions.length}`;
+  const pct = Math.round((score / questions.length) * 100);
+  let msg = "";
+  if (pct >= 80) msg = "Excellent ! La poussée d'Archimède n'a plus de secret pour toi.";
+  else if (pct >= 50) msg = "Bon travail, quelques notions sont encore à revoir.";
+  else msg = "Il serait utile de revoir le cours sur la poussée d'Archimède.";
+
+  let rowsHtml = "";
+  questions.forEach((item, i) => {
+    const ok = userAnswers[i].isCorrect;
+    rowsHtml += `
+      <div class="result-row ${ok ? 'ok' : 'ko'}">
+        <span class="mark">${ok ? '✓' : '✗'}</span>
+        <span>${item.q}${ok ? '' : ` — Réponse correcte : ${item.options[item.correct]}`}</span>
+      </div>`;
+  });
+
+  quizCard.innerHTML = `
+    <div class="result-card">
+      <div class="result-score">${score} / ${questions.length}</div>
+      <div class="result-msg">${msg}</div>
+      <div class="result-list">${rowsHtml}</div>
+      <button class="restart-btn" id="restartBtn">Recommencer le quiz</button>
+    </div>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    current = 0;
+    score = 0;
+    userAnswers.length = 0;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
