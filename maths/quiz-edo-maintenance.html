@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Régimes transitoires — équations différentielles d'ordre 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" async></script>
+<style>
+  :root {
+    --bg: #E4E9EE;
+    --grid-line: rgba(27,36,48,0.07);
+    --panel: #FFFFFF;
+    --panel-border: #C7D0D9;
+    --ink: #1B2430;
+    --ink-muted: #5A6572;
+    --accent-hot: #C1652D;
+    --accent-cool: #2E8B74;
+    --danger: #B23A2E;
+    --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12171D;
+      --grid-line: rgba(231,236,240,0.06);
+      --panel: #1B222B;
+      --panel-border: #2B3540;
+      --ink: #E7ECF0;
+      --ink-muted: #93A0AC;
+      --accent-hot: #E0973E;
+      --accent-cool: #4FB28C;
+      --danger: #D9614F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12171D;
+    --grid-line: rgba(231,236,240,0.06);
+    --panel: #1B222B;
+    --panel-border: #2B3540;
+    --ink: #E7ECF0;
+    --ink-muted: #93A0AC;
+    --accent-hot: #E0973E;
+    --accent-cool: #4FB28C;
+    --danger: #D9614F;
+  }
+  * { box-sizing: inherit; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 28px),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a, button { font-family: inherit; }
+  .wrap {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 2.75rem 1.25rem 4rem;
+  }
+  @media (max-width: 480px) {
+    .wrap { padding: 1.75rem 1rem 3rem; }
+  }
+  header h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    letter-spacing: -0.01em;
+    margin: 0 0 0.5rem;
+    max-width: 34ch;
+  }
+  header p.sub {
+    color: var(--ink-muted);
+    margin: 0 0 1.75rem;
+    max-width: 52ch;
+    font-size: 0.98rem;
+  }
+
+  /* thermal gauge */
+  .gauge {
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 1rem 1.15rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .gauge-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .gauge-label {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+  }
+  .gauge-progress {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+  }
+  .gauge-readout {
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .gauge-track {
+    position: relative;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--accent-hot), var(--accent-cool));
+    overflow: visible;
+  }
+  .gauge-marker {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 3px solid var(--ink);
+    transform: translate(-50%, -50%);
+    transition: left 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .gauge-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+  }
+
+  /* method reminder */
+  .formula-box {
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 0.9rem 1.15rem;
+    margin-bottom: 1.1rem;
+  }
+  .formula-box summary {
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .formula-box summary::-webkit-details-marker { display: none; }
+  .formula-box summary::before {
+    content: '+';
+    font-family: var(--font-mono);
+    color: var(--ink-muted);
+    width: 1rem;
+    flex: none;
+  }
+  .formula-box[open] summary::before { content: '\2212'; }
+  .formula-box summary:focus-visible { outline: 2px solid var(--accent-cool); outline-offset: 2px; }
+  .formula-box .formula-body {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    font-size: 0.95rem;
+  }
+  .formula-body p { margin: 0; }
+  .steps {
+    margin: 0;
+    padding-left: 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .steps li::marker {
+    color: var(--ink-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+  .steps strong { font-weight: 600; }
+  .keybox {
+    padding: 0.75rem 0.9rem;
+    border-left: 3px solid var(--accent-cool);
+    background: color-mix(in srgb, var(--accent-cool) 8%, transparent);
+    border-radius: 0 4px 4px 0;
+    font-size: 0.92rem;
+  }
+  .last-note {
+    font-size: 0.88rem;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+
+  /* quiz card */
+  .card {
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    border-radius: 6px;
+    padding: 1.6rem 1.5rem;
+  }
+  @media (max-width: 480px) {
+    .card { padding: 1.25rem 1.1rem; }
+  }
+  .qid {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    margin: 0 0 0.75rem;
+  }
+  .prompt {
+    font-size: 1.05rem;
+    margin: 0 0 1.3rem;
+  }
+  .prompt mjx-container { font-size: 1.02em !important; }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.1rem;
+  }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: left;
+    border: 1px solid var(--panel-border);
+    background: transparent;
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 0.7rem 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .option:hover:not(:disabled) { border-color: var(--ink-muted); }
+  .option:focus-visible { outline: 2px solid var(--accent-cool); outline-offset: 2px; }
+  .option .tag {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+    border: 1px solid var(--panel-border);
+    border-radius: 3px;
+    width: 1.6rem;
+    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .option .txt { flex: 1; }
+  .option.selected { border-color: var(--ink); }
+  .option.correct { border-color: var(--accent-cool); background: color-mix(in srgb, var(--accent-cool) 10%, transparent); }
+  .option.correct .tag { border-color: var(--accent-cool); color: var(--accent-cool); }
+  .option.incorrect { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+  .option.incorrect .tag { border-color: var(--danger); color: var(--danger); }
+  .option:disabled { cursor: default; }
+
+  .hint-toggle {
+    background: none;
+    border: none;
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 1rem;
+  }
+  .hint-box {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    border-left: 2px solid var(--panel-border);
+    padding-left: 0.75rem;
+    margin: -0.4rem 0 1rem;
+  }
+
+  .feedback {
+    border-radius: 4px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.95rem;
+  }
+  .feedback.correct { background: color-mix(in srgb, var(--accent-cool) 12%, transparent); }
+  .feedback.incorrect { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+  .feedback .verdict {
+    font-weight: 600;
+    margin: 0 0 0.35rem;
+  }
+  .feedback.correct .verdict { color: var(--accent-cool); }
+  .feedback.incorrect .verdict { color: var(--danger); }
+  .feedback p { margin: 0; }
+  .feedback mjx-container { font-size: 1em !important; }
+
+  .actions { display: flex; justify-content: flex-end; }
+  button.primary {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: var(--ink);
+    color: var(--panel);
+    border: none;
+    border-radius: 4px;
+    padding: 0.65rem 1.3rem;
+    cursor: pointer;
+  }
+  button.primary:disabled { opacity: 0.4; cursor: default; }
+  button.primary:focus-visible { outline: 2px solid var(--accent-cool); outline-offset: 2px; }
+  button.ghost {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    padding: 0.65rem 1.3rem;
+    cursor: pointer;
+  }
+
+  /* recap screen */
+  .recap-score {
+    font-family: var(--font-mono);
+    font-size: 2.4rem;
+    font-weight: 500;
+    margin: 0 0 0.25rem;
+  }
+  .recap-label { color: var(--ink-muted); margin: 0 0 1.3rem; font-size: 0.95rem; }
+  .recap-msg { margin: 0 0 1.5rem; max-width: 50ch; }
+  .recap-actions { display: flex; gap: 0.75rem; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Régimes transitoires en maintenance</h1>
+    <p class="sub">15 questions pour consolider la résolution des équations différentielles d'ordre 1 — refroidissement d'un moteur, charge d'un condensateur.</p>
+  </header>
+
+  <div class="gauge">
+    <div class="gauge-top">
+      <span class="gauge-label" id="gaugeLabel">Indicateur thermique — carter d'huile</span>
+      <span class="gauge-progress" id="progressReadout">Question 1 / 15</span>
+    </div>
+    <div class="gauge-top">
+      <span class="gauge-readout" id="tempReadout">90,0 °C</span>
+      <span class="gauge-label" aria-hidden="true">θ(t) = 20 + 70·e<sup>−0,28·n</sup>, n = bonnes réponses</span>
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-marker" id="gaugeMarker" style="left:0%"></div>
+    </div>
+    <div class="gauge-ticks"><span>90 °C</span><span>55 °C</span><span>20 °C</span></div>
+  </div>
+
+  <details class="formula-box" open>
+    <summary>Méthode — équation \( a\,y' + b\,y = c \)</summary>
+    <div class="formula-body">
+      <ol class="steps">
+        <li><strong>Solution homogène.</strong> On résout \( a\,y' + b\,y = 0 \). En séparant les variables : \( \dfrac{y'}{y} = -\dfrac{b}{a} \), d'où \( y_0(t) = C\,e^{-(b/a)\,t} \).</li>
+        <li><strong>Vérification de la solution particulière.</strong> On propose une solution particulière \(y_p\) (le plus souvent une constante). Comme \( y_p' = 0 \), on vérifie qu'elle est bien solution en la substituant dans l'équation complète : \( b\,y_p = c \), soit \( y_p = \dfrac{c}{b} \).</li>
+        <li><strong>Solution générale.</strong> C'est la somme des deux : \( y(t) = y_0(t) + y_p = C\,e^{-(b/a)t} + \dfrac{c}{b} \).</li>
+        <li><strong>Solution unique.</strong> La condition initiale \( y(0) \) permet de déterminer \(C\) : \( C = y(0) - \dfrac{c}{b} \).</li>
+      </ol>
+      <div class="keybox">Vocabulaire courant en électrotechnique&nbsp;: \(y_0\) est appelée <em>régime libre</em> (ou transitoire), \(y_p\) le <em>régime permanent</em> (valeur atteinte une fois le régime établi).</div>
+    </div>
+  </details>
+
+  <details class="formula-box">
+    <summary>Voir un exemple résolu, étape par étape</summary>
+    <div class="formula-body">
+      <p>On modélise le refroidissement d'une carcasse de moteur par \( 10\,\theta'(t) + \theta(t) = 22 \) (\(t\) en minutes), avec \( \theta(0) = 82\,^{\circ}\mathrm{C} \).</p>
+      <ol class="steps">
+        <li><strong>Solution homogène.</strong> \( 10\theta' + \theta = 0 \Rightarrow \dfrac{\theta'}{\theta} = -\dfrac{1}{10} \Rightarrow \theta_0(t) = C\,e^{-t/10} \).</li>
+        <li><strong>Vérification de la solution particulière.</strong> On propose \( \theta_p = 22 \). Comme \( \theta_p' = 0 \) : \( 10 \times 0 + 22 = 22 \) ✓. \(\theta_p = 22\) est bien solution.</li>
+        <li><strong>Solution générale.</strong> \( \theta(t) = C\,e^{-t/10} + 22 \).</li>
+        <li><strong>Solution unique.</strong> \( \theta(0) = 82 \Rightarrow C + 22 = 82 \Rightarrow C = 60 \). D'où \( \theta(t) = 60\,e^{-t/10} + 22 \).</li>
+      </ol>
+      <p class="last-note">Ce même schéma en 4 étapes s'applique à chaque question du quiz — reviens-y à chaque fois que tu bloques.</p>
+    </div>
+  </details>
+
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    id: 'q1',
+    prompt: String.raw`Quelle est la forme générale d'une équation différentielle linéaire du premier ordre à coefficients constants, telle qu'on l'utilise dans la méthode ci-dessus&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( a\,y'' + b\,y' + c\,y = d \)` },
+      { id: 'b', text: String.raw`\( a\,y' + b\,y = c \)` },
+      { id: 'c', text: String.raw`\( a\,y + b = 0 \)` },
+      { id: 'd', text: String.raw`\( a\,y' \times y = c \)` }
+    ],
+    correct: 'b',
+    hint: String.raw`L'ordre 1 signifie qu'une seule dérivée première apparaît, avec un coefficient devant chaque terme.`,
+    explanation: String.raw`Une équation différentielle linéaire d'ordre 1 à coefficients constants s'écrit \( a\,y' + b\,y = c \), avec \(a\), \(b\), \(c\) des constantes et \(a \neq 0\).`,
+    cf: 'Exact.', wf: 'Pas tout à fait — relis la forme donnée dans le rappel de méthode.'
+  },
+  {
+    id: 'q2',
+    prompt: String.raw`Quelle est la solution générale de l'équation homogène \( a\,y' + b\,y = 0 \) (\(a, b\) non nuls)&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( y_0 = C e^{-(b/a)x} \)` },
+      { id: 'b', text: String.raw`\( y_0 = C e^{(b/a)x} \)` },
+      { id: 'c', text: String.raw`\( y_0 = C - (b/a)x \)` },
+      { id: 'd', text: String.raw`\( y_0 = \dfrac{C}{x} \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Sépare les variables&nbsp;: \( a\,y' = -b\,y \Rightarrow \dfrac{y'}{y} = -\dfrac{b}{a} \), puis intègre.`,
+    explanation: String.raw`En séparant les variables&nbsp;: \( \dfrac{y'}{y} = -\dfrac{b}{a} \), d'où \( \ln|y| = -\dfrac{b}{a}x + k \), soit \( y_0 = C e^{-(b/a)x} \) (étape 1 du rappel).`,
+    cf: 'Bien vu.', wf: 'Reprends la séparation des variables (étape 1 du rappel).'
+  },
+  {
+    id: 'q3',
+    prompt: String.raw`Pour résoudre \( a\,y' + b\,y = c \) (\(a, b, c\) constantes, \(a, b \neq 0\)), quelle méthode applique-t-on&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`On cherche uniquement une solution particulière constante, sans résoudre l'équation homogène` },
+      { id: 'b', text: String.raw`On résout l'équation homogène, on vérifie qu'une solution particulière est bien solution de l'équation complète, on additionne les deux pour former la solution générale, puis on utilise la condition initiale pour obtenir la solution unique` },
+      { id: 'c', text: String.raw`On intègre directement les deux membres par rapport au temps` },
+      { id: 'd', text: String.raw`On dérive les deux membres pour se ramener à l'ordre 2` }
+    ],
+    correct: 'b',
+    hint: String.raw`Suis les 4 étapes du rappel de méthode, dans l'ordre.`,
+    explanation: String.raw`La méthode complète comporte 4 étapes&nbsp;: solution homogène, vérification de la solution particulière, solution générale (somme des deux), puis solution unique grâce à la condition initiale.`,
+    cf: "C'est la bonne méthode.", wf: 'Non — revois les 4 étapes du rappel de méthode.'
+  },
+  {
+    id: 'q4',
+    prompt: String.raw`Pour l'équation \( a\,y' + b\,y = c \), on propose une solution particulière constante \(y_p\). Puisque \( y_p' = 0 \), en la substituant dans l'équation, que doit-on vérifier pour conclure&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( b\,y_p = c \), ce qui donne \( y_p = \dfrac{c}{b} \)` },
+      { id: 'b', text: String.raw`\( a\,y_p = c \), ce qui donne \( y_p = \dfrac{c}{a} \)` },
+      { id: 'c', text: String.raw`\( y_p = a\,c \)` },
+      { id: 'd', text: String.raw`\( y_p = c - b \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Remplace \(y'\) par 0 dans \( a\,y' + b\,y = c \).`,
+    explanation: String.raw`Puisque \(y_p\) est constante, \(y_p' = 0\). L'équation devient \( b\,y_p = c \), donc \( y_p = \dfrac{c}{b} \)&nbsp;: c'est l'étape 2 du rappel (vérification de la solution particulière).`,
+    cf: 'Parfait.', wf: 'Repense à la dérivée d\u2019une constante (étape 2 du rappel).'
+  },
+  {
+    id: 'q5',
+    prompt: String.raw`Pour modéliser le refroidissement d'un carter d'huile, on obtient l'équation \( 25\,\theta'(t) + \theta(t) = 18 \) (\(t\) en minutes). Quelle est la solution de l'équation homogène associée&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( \theta_0(t) = C\,e^{-t/25} \)` },
+      { id: 'b', text: String.raw`\( \theta_0(t) = C\,e^{t/25} \)` },
+      { id: 'c', text: String.raw`\( \theta_0(t) = C\,e^{-25t} \)` },
+      { id: 'd', text: String.raw`\( \theta_0(t) = C - 25t \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Identifie \(a = 25\) et \(b = 1\), puis applique l'étape 1 du rappel&nbsp;: exposant \( -(b/a)t \).`,
+    explanation: String.raw`Avec \(a = 25\), \(b = 1\)&nbsp;: \( \dfrac{\theta'}{\theta} = -\dfrac{1}{25} \), d'où \( \theta_0(t) = C\,e^{-t/25} \) (étape 1).`,
+    cf: 'Bien vu.', wf: 'Reviens à l\u2019étape 1 du rappel&nbsp;: exposant \\(-(b/a)t\\).'
+  },
+  {
+    id: 'q6',
+    prompt: String.raw`Pour la même équation \( 25\,\theta'(t) + \theta(t) = 18 \), on propose la solution particulière constante \( \theta_p = 18 \). Comment vérifie-t-on qu'elle est solution&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( \theta_p' = 0 \), donc \( 25 \times 0 + 18 = 18 \)&nbsp;: l'égalité est vérifiée` },
+      { id: 'b', text: String.raw`On dérive \( \theta_p \) deux fois et on vérifie que le résultat est nul` },
+      { id: 'c', text: String.raw`On remplace \( t \) par 0 dans \( \theta_p \)` },
+      { id: 'd', text: String.raw`On vérifie que \( \theta_p = 25 \times 18 \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Une constante a une dérivée nulle&nbsp;: substitue \( \theta_p' = 0 \) dans l'équation complète.`,
+    explanation: String.raw`\( \theta_p \) est constante, donc \( \theta_p' = 0 \). En substituant dans \( 25\theta' + \theta = 18 \)&nbsp;: \( 25 \times 0 + 18 = 18 \), l'égalité est vérifiée&nbsp;: \(\theta_p = 18\) est bien solution (étape 2).`,
+    cf: 'Bien vérifié.', wf: 'Repense à la dérivée d\u2019une constante (étape 2 du rappel).'
+  },
+  {
+    id: 'q7',
+    prompt: String.raw`Quelle est la solution générale de \( 25\,\theta'(t) + \theta(t) = 18 \)&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( \theta(t) = C\,e^{-t/25} + 18 \)` },
+      { id: 'b', text: String.raw`\( \theta(t) = C\,e^{t/25} + 18 \)` },
+      { id: 'c', text: String.raw`\( \theta(t) = C + 18\,e^{-t/25} \)` },
+      { id: 'd', text: String.raw`\( \theta(t) = C\,e^{-t/25} - 18 \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Additionne la solution homogène (étape 1) et la solution particulière (étape 2).`,
+    explanation: String.raw`Solution générale = solution homogène + solution particulière (étape 3)&nbsp;: \( \theta(t) = C\,e^{-t/25} + 18 \).`,
+    cf: 'Exact.', wf: 'Reprends les étapes 1 et 2, puis additionne-les.'
+  },
+  {
+    id: 'q8',
+    prompt: String.raw`À \(t = 0\), la température du carter est \( \theta(0) = 90\,^{\circ}\mathrm{C} \). Sachant que \( \theta(t) = C\,e^{-t/25} + 18 \), quelle est la solution unique correspondante&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( \theta(t) = 72\,e^{-t/25} + 18 \)` },
+      { id: 'b', text: String.raw`\( \theta(t) = 90\,e^{-t/25} + 18 \)` },
+      { id: 'c', text: String.raw`\( \theta(t) = 72\,e^{t/25} + 18 \)` },
+      { id: 'd', text: String.raw`\( \theta(t) = 18\,e^{-t/25} + 72 \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Remplace \(t = 0\)&nbsp;: \( \theta(0) = C + 18 \), puis résous pour \(C\) (étape 4 du rappel).`,
+    explanation: String.raw`En posant \(t = 0\)&nbsp;: \( 90 = C + 18 \), donc \( C = 72 \) (étape 4).`,
+    cf: 'Bravo.', wf: 'Vérifie ton calcul de \\(C\\) (étape 4 du rappel).'
+  },
+  {
+    id: 'q9',
+    prompt: String.raw`Avec \( \theta(t) = 72\,e^{-t/25} + 18 \), au bout de combien de temps (arrondi à la minute) la température atteint-elle \( 40\,^{\circ}\mathrm{C} \), seuil de sécurité pour intervenir&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( \approx 30 \) minutes` },
+      { id: 'b', text: String.raw`\( \approx 18 \) minutes` },
+      { id: 'c', text: String.raw`\( \approx 45 \) minutes` },
+      { id: 'd', text: String.raw`\( \approx 12 \) minutes` }
+    ],
+    correct: 'a',
+    hint: String.raw`Isole l'exponentielle&nbsp;: \( e^{-t/25} = \dfrac{40-18}{72} \), puis applique \(\ln\).`,
+    explanation: String.raw`\( 40 = 72e^{-t/25} + 18 \Rightarrow e^{-t/25} = \dfrac{22}{72} \approx 0{,}306 \Rightarrow -\dfrac{t}{25} = \ln(0{,}306) \approx -1{,}185 \Rightarrow t \approx 29{,}6 \), soit environ 30 minutes.`,
+    cf: 'C\u2019est le bon délai.', wf: 'Isole l\u2019exponentielle puis utilise \\(\\ln\\).'
+  },
+  {
+    id: 'q10',
+    prompt: String.raw`Dans \( \theta(t) = 72\,e^{-t/25} + 18 \), que représente physiquement le nombre 25 (au dénominateur de l'exposant)&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`La constante de temps du refroidissement, qui caractérise la rapidité du phénomène` },
+      { id: 'b', text: String.raw`La température finale atteinte par le carter` },
+      { id: 'c', text: String.raw`La température initiale du carter` },
+      { id: 'd', text: String.raw`Le temps total avant la panne` }
+    ],
+    correct: 'a',
+    hint: String.raw`C'est le nombre \(a\) qui apparaît dans l'exposant \(-(b/a)t\) de la solution homogène (ici \(b=1\)).`,
+    explanation: String.raw`Ce nombre est la constante de temps du système&nbsp;: plus il est petit, plus le régime libre s'éteint vite et plus le refroidissement est rapide. Il ne dépend pas des conditions initiales.`,
+    cf: 'Exact.', wf: 'Repense au rôle de ce nombre dans la solution homogène (étape 1).'
+  },
+  {
+    id: 'q11',
+    prompt: String.raw`Quelle est \( \displaystyle\lim_{t \to +\infty} \theta(t) \) d'après \( \theta(t) = 72\,e^{-t/25} + 18 \)&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( 18\,^{\circ}\mathrm{C} \)` },
+      { id: 'b', text: String.raw`\( 0\,^{\circ}\mathrm{C} \)` },
+      { id: 'c', text: String.raw`\( 72\,^{\circ}\mathrm{C} \)` },
+      { id: 'd', text: String.raw`La limite est infinie` }
+    ],
+    correct: 'a',
+    hint: String.raw`Que devient le régime libre \( 72e^{-t/25} \) quand \(t\) devient très grand&nbsp;?`,
+    explanation: String.raw`Le régime libre s'éteint (le terme exponentiel tend vers 0), donc \( \theta(t) \) tend vers la solution particulière \( 18\,^{\circ}\mathrm{C} \)&nbsp;: c'est le régime permanent (équilibre thermique).`,
+    cf: 'Exactement, c\u2019est le régime permanent.', wf: 'Repense à ce que devient le régime libre quand \\(t\\) est grand.'
+  },
+  {
+    id: 'q12',
+    prompt: String.raw`Lors de la maintenance d'une alimentation, la charge d'un condensateur obéit à \( RC\,u'(t) + u(t) = E \), avec \( u(0) = 0 \). Quelle est la solution générale de cette équation&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( u(t) = C\,e^{-t/RC} + E \)` },
+      { id: 'b', text: String.raw`\( u(t) = C\,e^{t/RC} + E \)` },
+      { id: 'c', text: String.raw`\( u(t) = C + E\,e^{-t/RC} \)` },
+      { id: 'd', text: String.raw`\( u(t) = \dfrac{Et}{RC} \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Étape 1&nbsp;: solution homogène \( Ce^{-t/RC} \). Étape 2&nbsp;: on vérifie que \(u_p = E\) est solution (\(u_p'=0\), donc \(0+E=E\)). Étape 3&nbsp;: additionne.`,
+    explanation: String.raw`Solution homogène&nbsp;: \( C\,e^{-t/RC} \) (\(a=RC, b=1\)). Solution particulière vérifiée&nbsp;: \( u_p = E \) convient car \( RC\times 0 + E = E \). Solution générale (étape 3)&nbsp;: \( u(t) = C\,e^{-t/RC} + E \).`,
+    cf: 'Bien transposé.', wf: 'Reprends les étapes 1 à 3 appliquées à cette équation.'
+  },
+  {
+    id: 'q13',
+    prompt: String.raw`Avec la condition initiale \( u(0) = 0 \), quelle est la solution unique de \( RC\,u'(t) + u(t) = E \)&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( u(t) = E\left(1 - e^{-t/RC}\right) \)` },
+      { id: 'b', text: String.raw`\( u(t) = E\,e^{-t/RC} \)` },
+      { id: 'c', text: String.raw`\( u(t) = E + e^{-t/RC} \)` },
+      { id: 'd', text: String.raw`\( u(t) = \dfrac{Et}{RC} \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Remplace \(t=0\) dans \( u(t) = C e^{-t/RC} + E \), puis résous pour \(C\) (étape 4).`,
+    explanation: String.raw`\( u(0) = 0 \Rightarrow C + E = 0 \Rightarrow C = -E \). D'où \( u(t) = E - E\,e^{-t/RC} = E\left(1 - e^{-t/RC}\right) \) (étape 4)&nbsp;: la courbe classique de charge d'un condensateur.`,
+    cf: 'C\u2019est la courbe de charge classique.', wf: 'Reprends l\u2019étape 4&nbsp;: remplace \\(t=0\\) et résous pour \\(C\\).'
+  },
+  {
+    id: 'q14',
+    prompt: String.raw`Sur une courbe de charge \( u(t) = E\left(1 - e^{-t/\tau}\right) \), à quel instant la tension atteint-elle environ 63&nbsp;% de sa valeur finale \(E\)&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`\( t = \tau \)` },
+      { id: 'b', text: String.raw`\( t = 2\tau \)` },
+      { id: 'c', text: String.raw`\( t = \tau/2 \)` },
+      { id: 'd', text: String.raw`\( t = 5\tau \)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Remplace \(t\) par \(\tau\) et calcule \( 1 - e^{-1} \).`,
+    explanation: String.raw`À \( t = \tau \)&nbsp;: \( u(\tau) = E(1 - e^{-1}) \approx 0{,}632\,E \). C'est la méthode classique de lecture de la constante de temps sur un oscillogramme ou une courbe de refroidissement.`,
+    cf: 'Exact, c\u2019est la règle des 63\u00a0%.', wf: 'Recalcule \\(1 - e^{-1}\\) pour \\(t=\\tau\\).'
+  },
+  {
+    id: 'q15',
+    prompt: String.raw`Un élève résout \( y' + 3y = 12 \) (soit \(a=1\), \(b=3\), \(c=12\)) et trouve \( y(t) = C\,e^{3t} + 4 \). Quelle erreur a-t-il commise&nbsp;?`,
+    options: [
+      { id: 'a', text: String.raw`Il a inversé le signe dans l'exponentielle de la solution homogène (étape 1) : il fallait \( C\,e^{-3t} \)` },
+      { id: 'b', text: String.raw`La solution particulière (étape 2) est fausse, il fallait 12` },
+      { id: 'c', text: String.raw`Il fallait un signe négatif devant le \(C\)` },
+      { id: 'd', text: String.raw`Il manque un terme en \(t\)` }
+    ],
+    correct: 'a',
+    hint: String.raw`Reprends l'étape 1 avec \(a=1\), \(b=3\)&nbsp;: l'exposant est \(-(b/a)t\).`,
+    explanation: String.raw`La solution particulière (étape 2) est correcte&nbsp;: \( y_p' = 0 \), donc \( 3y_p = 12 \), soit \( y_p = 4 \). Mais la solution homogène (étape 1) de \( y' + 3y = 0 \) est \( y_0 = C\,e^{-(b/a)t} = C\,e^{-3t} \), et non \( C\,e^{3t} \)&nbsp;: erreur de signe fréquente.`,
+    cf: 'Bien repéré, c\u2019est une erreur classique.', wf: 'Refais l\u2019étape 1 (solution homogène) avec \\(a=1, b=3\\).'
+  }
+];
+
+const TOTAL = QUESTIONS.length;
+let current = 0;
+let correctCount = 0;
+let answered = false;
+let selected = null;
+
+const card = document.getElementById('card');
+const tempReadout = document.getElementById('tempReadout');
+const gaugeMarker = document.getElementById('gaugeMarker');
+const progressReadout = document.getElementById('progressReadout');
+
+function currentTemp(n) {
+  return 20 + 70 * Math.exp(-0.28 * n);
+}
+
+function updateGauge() {
+  const t = currentTemp(correctCount);
+  tempReadout.textContent = t.toFixed(1).replace('.', ',') + ' °C';
+  const pct = Math.min(100, Math.max(0, ((90 - t) / (90 - 20)) * 100));
+  gaugeMarker.style.left = pct + '%';
+  if (current < TOTAL) {
+    progressReadout.textContent = `Question ${current + 1} / ${TOTAL}`;
+  } else {
+    progressReadout.textContent = `Terminé — ${TOTAL} / ${TOTAL}`;
+  }
+}
+
+function typeset(scope) {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise([scope]).catch(() => {});
+  }
+}
+
+function renderQuestion() {
+  answered = false;
+  selected = null;
+  const q = QUESTIONS[current];
+  card.innerHTML = `
+    <p class="qid">Question ${current + 1} sur ${TOTAL}</p>
+    <p class="prompt">${q.prompt}</p>
+    <div class="options" id="options"></div>
+    ${q.hint ? `<button class="hint-toggle" id="hintBtn" type="button">Afficher un indice</button><div class="hint-box" id="hintBox" style="display:none;"></div>` : ''}
+    <div id="feedbackArea"></div>
+    <div class="actions"><button class="primary" id="actionBtn" disabled>Vérifier</button></div>
+  `;
+  const optionsWrap = card.querySelector('#options');
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.type = 'button';
+    btn.dataset.id = opt.id;
+    btn.innerHTML = `<span class="tag">${opt.id.toUpperCase()}</span><span class="txt">${opt.text}</span>`;
+    btn.addEventListener('click', () => selectOption(opt.id));
+    optionsWrap.appendChild(btn);
+  });
+
+  if (q.hint) {
+    const hintBtn = card.querySelector('#hintBtn');
+    const hintBox = card.querySelector('#hintBox');
+    hintBox.innerHTML = q.hint;
+    hintBtn.addEventListener('click', () => {
+      const show = hintBox.style.display === 'none';
+      hintBox.style.display = show ? 'block' : 'none';
+      hintBtn.textContent = show ? 'Masquer l\u2019indice' : 'Afficher un indice';
+      typeset(hintBox);
+    });
+  }
+
+  const actionBtn = card.querySelector('#actionBtn');
+  actionBtn.addEventListener('click', onAction);
+
+  updateGauge();
+  typeset(card);
+}
+
+function selectOption(id) {
+  if (answered) return;
+  selected = id;
+  card.querySelectorAll('.option').forEach(b => {
+    b.classList.toggle('selected', b.dataset.id === id);
+  });
+  card.querySelector('#actionBtn').disabled = false;
+}
+
+function onAction() {
+  if (!answered) {
+    verify();
+  } else {
+    advance();
+  }
+}
+
+function verify() {
+  if (selected === null) return;
+  answered = true;
+  const q = QUESTIONS[current];
+  const isCorrect = selected === q.correct;
+  if (isCorrect) correctCount++;
+
+  card.querySelectorAll('.option').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.id === q.correct) b.classList.add('correct');
+    else if (b.dataset.id === selected) b.classList.add('incorrect');
+  });
+
+  const hintBtn = card.querySelector('#hintBtn');
+  if (hintBtn) hintBtn.disabled = true;
+
+  const feedbackArea = card.querySelector('#feedbackArea');
+  feedbackArea.innerHTML = `
+    <div class="feedback ${isCorrect ? 'correct' : 'incorrect'}">
+      <p class="verdict">${isCorrect ? q.cf : q.wf}</p>
+      <p>${q.explanation}</p>
+    </div>
+  `;
+
+  const actionBtn = card.querySelector('#actionBtn');
+  actionBtn.textContent = current === TOTAL - 1 ? 'Voir le bilan' : 'Question suivante';
+
+  updateGauge();
+  typeset(feedbackArea);
+}
+
+function advance() {
+  current++;
+  if (current < TOTAL) {
+    renderQuestion();
+  } else {
+    renderRecap();
+  }
+}
+
+function renderRecap() {
+  const t = currentTemp(correctCount);
+  let msg;
+  if (correctCount >= 13) {
+    msg = "Maîtrise solide de la méthode en quatre étapes : résolution du régime libre, vérification du régime permanent, solution générale, et détermination de la solution unique à partir de la condition initiale.";
+  } else if (correctCount >= 9) {
+    msg = "Bonne base. Revois le rappel de méthode ci-dessus, en particulier l'étape 2 (vérification de la solution particulière) et le signe de l'exposant du régime libre.";
+  } else {
+    msg = "Reprends la méthode en 4 étapes, en t'aidant de l'exemple résolu : résoudre l'équation homogène, vérifier la solution particulière par substitution, additionner les deux, puis utiliser la condition initiale.";
+  }
+  card.innerHTML = `
+    <p class="qid">Bilan</p>
+    <p class="recap-score">${correctCount} / ${TOTAL}</p>
+    <p class="recap-label">bonnes réponses — température finale simulée : ${t.toFixed(1).replace('.', ',')} °C</p>
+    <p class="recap-msg">${msg}</p>
+    <div class="recap-actions">
+      <button class="primary" id="restartBtn">Recommencer</button>
+    </div>
+  `;
+  card.querySelector('#restartBtn').addEventListener('click', () => {
+    current = 0; correctCount = 0;
+    renderQuestion();
+  });
+  updateGauge();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
