@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Lycée Gustave Eiffel</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card-bg: #ffffff; --text: #1c2330; --text-muted: #5a6270;
+    --accent: #1d6fa5; --accent-dark: #164f77; --border: #e0e4ec; --option-bg: #f8f9fc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161f; --card-bg: #1d2030; --text: #eef1f7; --text-muted: #a2a8b8;
+      --accent: #4f9fd8; --accent-dark: #3a7fb0; --border: #2c3042; --option-bg: #262a3c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161f; --card-bg: #1d2030; --text: #eef1f7; --text-muted: #a2a8b8;
+    --accent: #4f9fd8; --accent-dark: #3a7fb0; --border: #2c3042; --option-bg: #262a3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    display: flex; justify-content: center; padding: 24px 14px 60px; min-height: 100vh;
+  }
+  .wrap { width: 100%; max-width: 640px; }
+  header { text-align: center; margin-bottom: 30px; }
+  header h1 { font-size: clamp(1.4rem, 5vw, 1.9rem); margin: 0 0 4px; color: var(--accent-dark); }
+  header p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+  .subject-grid {
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .subject-card {
+    display: flex; align-items: center; gap: 18px; background: var(--card-bg);
+    border: 1px solid var(--border); border-radius: 18px; padding: 24px 22px;
+    text-decoration: none; color: var(--text); box-shadow: 0 3px 14px rgba(0,0,0,0.05);
+    transition: transform .12s ease, border-color .12s ease;
+  }
+  .subject-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .subject-icon {
+    font-size: 2.3rem; flex-shrink: 0; width: 64px; height: 64px; border-radius: 14px;
+    background: var(--option-bg); display: flex; align-items: center; justify-content: center;
+  }
+  .subject-info h2 { margin: 0 0 4px; font-size: 1.2rem; }
+  .subject-info p { margin: 0; font-size: 0.88rem; color: var(--text-muted); }
+  footer { text-align: center; color: var(--text-muted); font-size: 0.78rem; margin-top: 34px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📚 Quiz — Lycée Gustave Eiffel</h1>
+    <p>Bac Pro MELEC / BTS · Gannat</p>
+  </header>
+
+  <div class="subject-grid">
+    <a href="maths/index.html" class="subject-card">
+      <div class="subject-icon">📐</div>
+      <div class="subject-info">
+        <h2>Mathématiques</h2>
+        <p>Suites, fonctions, statistiques…</p>
+      </div>
+    </a>
+    <a href="sciences/index.html" class="subject-card">
+      <div class="subject-icon">🧪</div>
+      <div class="subject-info">
+        <h2>Sciences physiques</h2>
+        <p>Mécanique, électricité, fluides…</p>
+      </div>
+    </a>
+  </div>
+
+  <footer>Hébergé sur GitHub Pages</footer>
+</div>
+</body>
+</html>
