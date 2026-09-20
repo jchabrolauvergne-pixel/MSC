@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Poids et masse</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card-bg: #ffffff;
+    --text: #1c2330;
+    --text-muted: #5a6270;
+    --accent: #1d6fa5;
+    --accent-dark: #164f77;
+    --correct: #1e8e5a;
+    --correct-bg: #e3f6ec;
+    --wrong: #c0392b;
+    --wrong-bg: #fbeaea;
+    --border: #e0e4ec;
+    --option-bg: #f8f9fc;
+    --option-hover: #eaf1f8;
+    --progress-track: #e2e7f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161f;
+      --card-bg: #1d2030;
+      --text: #eef1f7;
+      --text-muted: #a2a8b8;
+      --accent: #4f9fd8;
+      --accent-dark: #3a7fb0;
+      --correct: #4fd18f;
+      --correct-bg: #163326;
+      --wrong: #f2786b;
+      --wrong-bg: #3a1c1c;
+      --border: #2c3042;
+      --option-bg: #262a3c;
+      --option-hover: #2f3448;
+      --progress-track: #2c3042;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161f;
+    --card-bg: #1d2030;
+    --text: #eef1f7;
+    --text-muted: #a2a8b8;
+    --accent: #4f9fd8;
+    --accent-dark: #3a7fb0;
+    --correct: #4fd18f;
+    --correct-bg: #163326;
+    --wrong: #f2786b;
+    --wrong-bg: #3a1c1c;
+    --border: #2c3042;
+    --option-bg: #262a3c;
+    --option-hover: #2f3448;
+    --progress-track: #2c3042;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 24px 14px 60px;
+    min-height: 100vh;
+  }
+  .wrap { width: 100%; max-width: 640px; }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .back-link:hover { text-decoration: underline; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 {
+    font-size: clamp(1.3rem, 5vw, 1.7rem);
+    margin: 0 0 4px;
+    color: var(--accent-dark);
+  }
+  header p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--progress-track);
+    overflow: hidden;
+    margin: 18px 0 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .3s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .qnum {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .question {
+    font-size: 1.08rem;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    font-weight: 600;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--option-bg);
+    color: var(--text);
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .option:hover:not(:disabled) {
+    background: var(--option-hover);
+    border-color: var(--accent);
+  }
+  .option:disabled { cursor: default; }
+  .option.correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: var(--correct);
+    font-weight: 600;
+  }
+  .option.wrong {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: var(--wrong);
+    font-weight: 600;
+  }
+  .explanation {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--option-bg);
+    border-left: 4px solid var(--accent);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .nav-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+  }
+  .nav-btn.show { display: block; }
+  .nav-btn:hover { background: var(--accent-dark); }
+
+  .result-card { text-align: center; }
+  .result-score {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 6px 0 2px;
+  }
+  .result-msg { font-size: 1rem; color: var(--text-muted); margin-bottom: 18px; }
+  .result-list { text-align: left; display: flex; flex-direction: column; gap: 8px; margin: 18px 0; }
+  .result-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--option-bg);
+    font-size: 0.88rem;
+  }
+  .result-row .mark { font-weight: 800; flex-shrink: 0; }
+  .result-row.ok .mark { color: var(--correct); }
+  .result-row.ko .mark { color: var(--wrong); }
+  .restart-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: var(--accent-dark); }
+  footer { text-align: center; color: var(--text-muted); font-size: 0.78rem; margin-top: 22px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour aux quiz</a>
+  <header>
+    <h1>⚖️ Quiz — Poids et masse</h1>
+    <p>Sciences physiques · Première Bac Professionnel</p>
+  </header>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel"></div>
+
+  <div class="card" id="quizCard"></div>
+
+  <footer>Score enregistré uniquement le temps de la session</footer>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Quelle est la différence fondamentale entre la masse et le poids ?",
+    options: [
+      "Ce sont deux mots différents pour la même grandeur",
+      "La masse est une quantité de matière (constante), le poids est une force due à la gravité (variable selon le lieu)",
+      "Le poids est une quantité de matière, la masse est une force",
+      "La masse se mesure en newtons, le poids en kilogrammes"
+    ],
+    correct: 1,
+    explanation: "La masse (m) traduit la quantité de matière d'un objet et ne change pas d'un lieu à l'autre. Le poids (P) est la force exercée par la gravité sur cette masse : il dépend du lieu où l'on se trouve."
+  },
+  {
+    q: "Dans quelle unité exprime-t-on la masse ?",
+    options: ["Le newton (N)", "Le kilogramme (kg)", "Le pascal (Pa)", "Le joule (J)"],
+    correct: 1,
+    explanation: "La masse s'exprime en kilogrammes (kg), ou ses multiples/sous-multiples (g, t...)."
+  },
+  {
+    q: "Dans quelle unité exprime-t-on le poids ?",
+    options: ["Le kilogramme (kg)", "Le litre (L)", "Le newton (N)", "Le mètre (m)"],
+    correct: 2,
+    explanation: "Le poids est une force : il s'exprime en newtons (N), comme toute force."
+  },
+  {
+    q: "Quelle relation relie le poids P et la masse m d'un objet ?",
+    options: ["P = m + g", "P = m × g", "P = m / g", "P = g / m"],
+    correct: 1,
+    explanation: "P = m × g, où g est l'intensité de la pesanteur (≈ 9,8 N/kg sur Terre), m la masse en kg et P le poids en N."
+  },
+  {
+    q: "Calcul : quel est le poids d'un objet de masse 5 kg sur Terre (g = 9,8 N/kg) ?",
+    options: ["5 N", "9,8 N", "49 N", "0,51 N"],
+    correct: 2,
+    explanation: "P = m × g = 5 × 9,8 = 49 N."
+  },
+  {
+    q: "Un astronaute de masse 80 kg part sur la Lune, où g(Lune) ≈ 1,6 N/kg. Que devient sa masse et son poids ?",
+    options: [
+      "Sa masse et son poids restent tous les deux identiques",
+      "Sa masse reste 80 kg, mais son poids diminue fortement",
+      "Sa masse diminue, son poids reste identique",
+      "Sa masse et son poids augmentent tous les deux"
+    ],
+    correct: 1,
+    explanation: "La masse (80 kg) ne dépend pas du lieu : elle reste la même. En revanche le poids change car g est plus faible sur la Lune : P(Lune) = 80 × 1,6 = 128 N, bien inférieur au poids sur Terre (≈ 784 N)."
+  },
+  {
+    q: "Quel instrument permet de mesurer directement une masse ?",
+    options: ["Le dynamomètre", "La balance", "Le thermomètre", "Le manomètre"],
+    correct: 1,
+    explanation: "Une balance compare la masse d'un objet à des masses étalons (ou utilise un capteur électronique calibré en masse) : elle donne directement une masse en kg."
+  },
+  {
+    q: "Quel instrument permet de mesurer directement un poids (une force) ?",
+    options: ["La balance", "Le dynamomètre", "Le compteur électrique", "Le chronomètre"],
+    correct: 1,
+    explanation: "Le dynamomètre mesure une force (via l'allongement d'un ressort par exemple) : il donne directement un poids en newtons."
+  },
+  {
+    q: "Dans le langage courant, on dit souvent « je pèse 70 kg ». D'un point de vue physique, cette phrase...",
+    options: [
+      "Est rigoureusement exacte : on parle bien du poids",
+      "Est un abus de langage : 70 kg est en réalité une masse, le poids correspondant serait en newtons",
+      "Est fausse car le poids ne se mesure jamais en kg",
+      "N'a pas de sens en physique"
+    ],
+    correct: 1,
+    explanation: "Le kilogramme est l'unité de masse, pas de poids. Dans le langage courant on confond souvent les deux, mais en physique 70 kg désigne une masse ; le poids correspondant serait P = 70 × 9,8 ≈ 686 N."
+  },
+  {
+    q: "Sur Terre, l'intensité de la pesanteur g varie très légèrement selon le lieu (altitude, latitude). Quelle conséquence cela a-t-il ?",
+    options: [
+      "La masse d'un objet varie légèrement d'un lieu à l'autre",
+      "Le poids d'un objet varie légèrement d'un lieu à l'autre, alors que sa masse reste constante",
+      "Ni la masse ni le poids ne varient jamais",
+      "Seule la masse varie, jamais le poids"
+    ],
+    correct: 1,
+    explanation: "g dépend légèrement du lieu (un peu plus faible en altitude ou près de l'équateur). Comme P = m × g, le poids varie donc légèrement d'un lieu à l'autre, tandis que la masse, elle, reste rigoureusement constante."
+  }
+];
+
+let current = 0;
+let score = 0;
+const userAnswers = [];
+
+const quizCard = document.getElementById('quizCard');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+
+function updateProgress() {
+  const pct = (current / questions.length) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = `Question ${Math.min(current+1, questions.length)} / ${questions.length}`;
+}
+
+function renderQuestion() {
+  updateProgress();
+  const item = questions[current];
+  quizCard.innerHTML = `
+    <span class="qnum">Question ${current + 1}</span>
+    <p class="question">${item.q}</p>
+    <div class="options" id="optionsWrap"></div>
+    <div class="explanation" id="explanation">${item.explanation}</div>
+    <button class="nav-btn" id="nextBtn">${current === questions.length - 1 ? 'Voir mon score' : 'Question suivante'}</button>
+  `;
+  const optionsWrap = document.getElementById('optionsWrap');
+  item.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => selectAnswer(idx));
+    optionsWrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx) {
+  const item = questions[current];
+  const optionButtons = document.querySelectorAll('#optionsWrap .option');
+  optionButtons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === item.correct) btn.classList.add('correct');
+    else if (i === idx) btn.classList.add('wrong');
+  });
+  const isCorrect = idx === item.correct;
+  if (isCorrect) score++;
+  userAnswers.push({ chosen: idx, correct: item.correct, isCorrect });
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'nextBtn') {
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  }
+});
+
+function renderResult() {
+  progressFill.style.width = '100%';
+  progressLabel.textContent = `Terminé — ${questions.length} / ${questions.length}`;
+  const pct = Math.round((score / questions.length) * 100);
+  let msg = "";
+  if (pct >= 80) msg = "Excellent ! La différence entre poids et masse n'a plus de secret pour toi.";
+  else if (pct >= 50) msg = "Bon travail, quelques notions sont encore à revoir.";
+  else msg = "Il serait utile de revoir le cours sur le poids et la masse.";
+
+  let rowsHtml = "";
+  questions.forEach((item, i) => {
+    const ok = userAnswers[i].isCorrect;
+    rowsHtml += `
+      <div class="result-row ${ok ? 'ok' : 'ko'}">
+        <span class="mark">${ok ? '✓' : '✗'}</span>
+        <span>${item.q}${ok ? '' : ` — Réponse correcte : ${item.options[item.correct]}`}</span>
+      </div>`;
+  });
+
+  quizCard.innerHTML = `
+    <div class="result-card">
+      <div class="result-score">${score} / ${questions.length}</div>
+      <div class="result-msg">${msg}</div>
+      <div class="result-list">${rowsHtml}</div>
+      <button class="restart-btn" id="restartBtn">Recommencer le quiz</button>
+    </div>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    current = 0;
+    score = 0;
+    userAnswers.length = 0;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
