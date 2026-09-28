@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Suites arithmétiques : croissante ou décroissante</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card-bg: #ffffff;
+    --text: #1c2330;
+    --text-muted: #5a6270;
+    --accent: #1d6fa5;
+    --accent-dark: #164f77;
+    --correct: #1e8e5a;
+    --correct-bg: #e3f6ec;
+    --wrong: #c0392b;
+    --wrong-bg: #fbeaea;
+    --border: #e0e4ec;
+    --option-bg: #f8f9fc;
+    --option-hover: #eaf1f8;
+    --progress-track: #e2e7f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161f;
+      --card-bg: #1d2030;
+      --text: #eef1f7;
+      --text-muted: #a2a8b8;
+      --accent: #4f9fd8;
+      --accent-dark: #3a7fb0;
+      --correct: #4fd18f;
+      --correct-bg: #163326;
+      --wrong: #f2786b;
+      --wrong-bg: #3a1c1c;
+      --border: #2c3042;
+      --option-bg: #262a3c;
+      --option-hover: #2f3448;
+      --progress-track: #2c3042;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161f;
+    --card-bg: #1d2030;
+    --text: #eef1f7;
+    --text-muted: #a2a8b8;
+    --accent: #4f9fd8;
+    --accent-dark: #3a7fb0;
+    --correct: #4fd18f;
+    --correct-bg: #163326;
+    --wrong: #f2786b;
+    --wrong-bg: #3a1c1c;
+    --border: #2c3042;
+    --option-bg: #262a3c;
+    --option-hover: #2f3448;
+    --progress-track: #2c3042;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 24px 14px 60px;
+    min-height: 100vh;
+  }
+  .wrap { width: 100%; max-width: 640px; }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .back-link:hover { text-decoration: underline; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 {
+    font-size: clamp(1.3rem, 5vw, 1.7rem);
+    margin: 0 0 4px;
+    color: var(--accent-dark);
+  }
+  header p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--progress-track);
+    overflow: hidden;
+    margin: 18px 0 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .3s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .qnum {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .question {
+    font-size: 1.08rem;
+    line-height: 1.45;
+    margin: 0 0 18px;
+    font-weight: 600;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    text-align: left;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--option-bg);
+    color: var(--text);
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .option:hover:not(:disabled) {
+    background: var(--option-hover);
+    border-color: var(--accent);
+  }
+  .option:disabled { cursor: default; }
+  .option.correct {
+    background: var(--correct-bg);
+    border-color: var(--correct);
+    color: var(--correct);
+    font-weight: 600;
+  }
+  .option.wrong {
+    background: var(--wrong-bg);
+    border-color: var(--wrong);
+    color: var(--wrong);
+    font-weight: 600;
+  }
+  .explanation {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--option-bg);
+    border-left: 4px solid var(--accent);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .nav-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+  }
+  .nav-btn.show { display: block; }
+  .nav-btn:hover { background: var(--accent-dark); }
+
+  .result-card { text-align: center; }
+  .result-score {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 6px 0 2px;
+  }
+  .result-msg { font-size: 1rem; color: var(--text-muted); margin-bottom: 18px; }
+  .result-list { text-align: left; display: flex; flex-direction: column; gap: 8px; margin: 18px 0; }
+  .result-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--option-bg);
+    font-size: 0.88rem;
+  }
+  .result-row .mark { font-weight: 800; flex-shrink: 0; }
+  .result-row.ok .mark { color: var(--correct); }
+  .result-row.ko .mark { color: var(--wrong); }
+  .restart-btn {
+    margin-top: 6px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: var(--accent-dark); }
+  footer { text-align: center; color: var(--text-muted); font-size: 0.78rem; margin-top: 22px; }
+  .chart-box {
+    background: var(--option-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 8px 2px;
+    margin: 2px 0 18px;
+  }
+  .chart-box svg { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-link">← Retour aux quiz</a>
+  <header>
+    <h1>📈 Suites arithmétiques : croissante ou décroissante ?</h1>
+    <p>Mathématiques · Première Bac Professionnel · 12 questions</p>
+  </header>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-label" id="progressLabel"></div>
+
+  <div class="card" id="quizCard"></div>
+
+  <footer>Score enregistré uniquement le temps de la session</footer>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Une suite arithmétique a une raison r strictement positive (r > 0). Que peut-on dire de cette suite ?",
+    options: [
+      "Elle est décroissante",
+      "Elle est croissante",
+      "Elle est constante",
+      "On ne peut pas savoir"
+    ],
+    correct: 1,
+    explanation: "Si r > 0, chaque terme est plus grand que le précédent (uₙ₊₁ = uₙ + r > uₙ) : la suite est croissante."
+  },
+  {
+    q: "Une suite arithmétique a une raison r strictement négative (r < 0). Que peut-on dire de cette suite ?",
+    options: [
+      "Elle est croissante",
+      "Elle est constante",
+      "Elle est décroissante",
+      "Elle est forcément négative"
+    ],
+    correct: 2,
+    explanation: "Si r < 0, on ajoute un nombre négatif à chaque étape : chaque terme est plus petit que le précédent. La suite est décroissante. Attention : cela ne veut pas dire que ses termes sont négatifs !"
+  },
+  {
+    q: "Une suite arithmétique a pour raison r = 0. Que peut-on dire de cette suite ?",
+    options: [
+      "Elle est croissante",
+      "Elle est décroissante",
+      "Elle est constante",
+      "Ce n'est pas une suite arithmétique"
+    ],
+    correct: 2,
+    explanation: "Si r = 0, on ajoute 0 à chaque étape : tous les termes sont égaux. La suite est constante (c'est un cas particulier de suite arithmétique)."
+  },
+  {
+    q: "On considère la suite : 4 ; 9 ; 14 ; 19 ; 24 ... Quelle est sa raison et quel est son sens de variation ?",
+    chart: [{n:1,u:4},{n:2,u:9},{n:3,u:14},{n:4,u:19},{n:5,u:24}],
+    options: [
+      "r = 5 ; suite croissante",
+      "r = 5 ; suite décroissante",
+      "r = 4 ; suite croissante",
+      "r = −5 ; suite décroissante"
+    ],
+    correct: 0,
+    explanation: "9 − 4 = 5, 14 − 9 = 5... La raison est r = 5. Comme r > 0, la suite est croissante : sur le graphique, les points montent régulièrement."
+  },
+  {
+    q: "On considère la suite : 20 ; 17 ; 14 ; 11 ; 8 ... Quelle est sa raison et quel est son sens de variation ?",
+    chart: [{n:1,u:20},{n:2,u:17},{n:3,u:14},{n:4,u:11},{n:5,u:8}],
+    options: [
+      "r = 3 ; suite croissante",
+      "r = 3 ; suite décroissante",
+      "r = −3 ; suite décroissante",
+      "r = −3 ; suite croissante"
+    ],
+    correct: 2,
+    explanation: "17 − 20 = −3, 14 − 17 = −3... La raison est r = −3. Comme r < 0, la suite est décroissante : sur le graphique, les points descendent régulièrement."
+  },
+  {
+    q: "Une suite arithmétique a pour premier terme u₁ = 30 et pour raison r = −4. Quelle est la valeur de u₅ ?",
+    options: [
+      "u₅ = 10",
+      "u₅ = 14",
+      "u₅ = 46",
+      "u₅ = 18"
+    ],
+    correct: 1,
+    explanation: "uₙ = u₁ + (n − 1) × r, donc u₅ = 30 + 4 × (−4) = 30 − 16 = 14. La suite est décroissante : les termes diminuent de 4 à chaque étape (30 ; 26 ; 22 ; 18 ; 14)."
+  },
+  {
+    q: "Une suite arithmétique est définie par uₙ = 50 − 4n. Que peut-on dire de cette suite ?",
+    options: [
+      "Elle est croissante, de raison 4",
+      "Elle est décroissante, de raison −4",
+      "Elle est décroissante, de raison 50",
+      "Elle est croissante, de raison −4"
+    ],
+    correct: 1,
+    explanation: "Chaque fois que n augmente de 1, uₙ diminue de 4 : la raison est r = −4. Comme r < 0, la suite est décroissante. (Ses premiers termes : u₁ = 46 ; u₂ = 42 ; u₃ = 38...)"
+  },
+  {
+    q: "Un abonnement coûte 90 € le premier mois (u₁ = 90), puis son prix baisse de 5 € chaque mois. Quel est le prix u₇ au 7ᵉ mois, et comment évolue la suite ?",
+    options: [
+      "u₇ = 125 € ; suite croissante",
+      "u₇ = 55 € ; suite décroissante",
+      "u₇ = 60 € ; suite décroissante",
+      "u₇ = 65 € ; suite croissante"
+    ],
+    correct: 2,
+    explanation: "La raison est r = −5. Donc u₇ = u₁ + 6 × r = 90 + 6 × (−5) = 90 − 30 = 60 €. Comme r < 0, la suite est décroissante."
+  },
+  {
+    q: "Parmi ces affirmations, laquelle est FAUSSE ?",
+    options: [
+      "Si r > 0, la suite arithmétique est croissante",
+      "Si r < 0, la suite arithmétique est décroissante",
+      "Une suite arithmétique est croissante dès que son premier terme u₁ est positif",
+      "Le sens de variation d'une suite arithmétique dépend du signe de sa raison"
+    ],
+    correct: 2,
+    explanation: "C'est le signe de la raison r qui donne le sens de variation, pas le signe du premier terme. Exemple : u₁ = 10 et r = −2 donne 10 ; 8 ; 6 ; 4... : premier terme positif, mais suite décroissante."
+  },
+  {
+    q: "Une suite arithmétique a pour premier terme u₁ = 3 et pour quatrième terme u₄ = 15. Quelle est sa raison et son sens de variation ?",
+    options: [
+      "r = 3 ; suite croissante",
+      "r = 4 ; suite décroissante",
+      "r = 12 ; suite croissante",
+      "r = 4 ; suite croissante"
+    ],
+    correct: 3,
+    explanation: "u₄ = u₁ + 3r, donc 15 = 3 + 3r, soit 3r = 12 et r = 4. Comme r > 0, la suite est croissante (3 ; 7 ; 11 ; 15)."
+  },
+  {
+    q: "Voici la représentation graphique d'une suite arithmétique (les points sont alignés). Quel est son sens de variation ?",
+    chart: [{n:1,u:15},{n:2,u:11},{n:3,u:7},{n:4,u:3},{n:5,u:-1}],
+    options: [
+      "Croissante",
+      "Décroissante",
+      "Constante",
+      "On ne peut pas savoir sans calcul"
+    ],
+    correct: 1,
+    explanation: "Sur le graphique, les points sont alignés et leur hauteur diminue quand n augmente : la raison est négative (ici r = −4), donc la suite est décroissante."
+  },
+  {
+    q: "Voici la représentation graphique d'une autre suite arithmétique. En lisant le graphique, quelle est sa raison r ?",
+    chart: [{n:1,u:2},{n:2,u:5},{n:3,u:8},{n:4,u:11},{n:5,u:14}],
+    options: [
+      "r = 2",
+      "r = 3",
+      "r = −3",
+      "r = 5"
+    ],
+    correct: 1,
+    explanation: "Entre deux points consécutifs, la hauteur augmente de 3 à chaque fois (2 ; 5 ; 8 ; 11 ; 14) : la raison est r = 3. Comme r > 0, la suite est croissante, ce qu'on retrouve sur le graphique."
+  }
+];
+
+let current = 0;
+let score = 0;
+const userAnswers = [];
+
+const quizCard = document.getElementById('quizCard');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+
+function seqChartSVG(points) {
+  const width = 300, height = 170;
+  const padL = 34, padR = 14, padT = 16, padB = 30;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+  const ns = points.map(p => p.n);
+  const us = points.map(p => p.u);
+  const nMin = Math.min(...ns), nMax = Math.max(...ns);
+  const uMin = Math.min(...us), uMax = Math.max(...us);
+  const uRange = (uMax - uMin) || 1;
+  const pad = uRange * 0.2;
+  const yMin = uMin - pad, yMax = uMax + pad;
+  const xScale = n => padL + ((n - nMin) / ((nMax - nMin) || 1)) * plotW;
+  const yScale = u => padT + plotH - ((u - yMin) / ((yMax - yMin) || 1)) * plotH;
+
+  let zeroLine = '';
+  if (yMin < 0 && yMax > 0) {
+    const y0 = yScale(0);
+    zeroLine = `<line x1="${padL}" y1="${y0}" x2="${width - padR}" y2="${y0}" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3" /><text x="${padL - 6}" y="${y0 + 3}" text-anchor="end" font-size="10" fill="var(--text-muted)">0</text>`;
+  }
+
+  const linePoints = points.map(p => `${xScale(p.n)},${yScale(p.u)}`).join(' ');
+
+  const dots = points.map(p => {
+    const x = xScale(p.n), y = yScale(p.u);
+    return `
+      <circle cx="${x}" cy="${y}" r="5" fill="var(--accent)" stroke="var(--card-bg)" stroke-width="2" />
+      <text x="${x}" y="${y - 11}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--text)">${p.u}</text>
+      <text x="${x}" y="${height - padB + 18}" text-anchor="middle" font-size="10" fill="var(--text-muted)">n=${p.n}</text>
+    `;
+  }).join('');
+
+  return `
+    <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" role="img" aria-label="Graphique de la suite : points (n, u_n)">
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${height - padB}" stroke="var(--border)" stroke-width="1" />
+      <line x1="${padL}" y1="${height - padB}" x2="${width - padR}" y2="${height - padB}" stroke="var(--border)" stroke-width="1" />
+      ${zeroLine}
+      <polyline points="${linePoints}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      ${dots}
+    </svg>
+  `;
+}
+
+function updateProgress() {
+  const pct = (current / questions.length) * 100;
+  progressFill.style.width = pct + '%';
+  progressLabel.textContent = `Question ${Math.min(current+1, questions.length)} / ${questions.length}`;
+}
+
+function renderQuestion() {
+  updateProgress();
+  const item = questions[current];
+  const chartHtml = item.chart ? `<div class="chart-box">${seqChartSVG(item.chart)}</div>` : '';
+  quizCard.innerHTML = `
+    <span class="qnum">Question ${current + 1}</span>
+    <p class="question">${item.q}</p>
+    ${chartHtml}
+    <div class="options" id="optionsWrap"></div>
+    <div class="explanation" id="explanation">${item.explanation}</div>
+    <button class="nav-btn" id="nextBtn">${current === questions.length - 1 ? 'Voir mon score' : 'Question suivante'}</button>
+  `;
+  const optionsWrap = document.getElementById('optionsWrap');
+  item.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => selectAnswer(idx));
+    optionsWrap.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx) {
+  const item = questions[current];
+  const optionButtons = document.querySelectorAll('#optionsWrap .option');
+  optionButtons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === item.correct) btn.classList.add('correct');
+    else if (i === idx) btn.classList.add('wrong');
+  });
+  const isCorrect = idx === item.correct;
+  if (isCorrect) score++;
+  userAnswers.push({ chosen: idx, correct: item.correct, isCorrect });
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'nextBtn') {
+    current++;
+    if (current < questions.length) {
+      renderQuestion();
+    } else {
+      renderResult();
+    }
+  }
+});
+
+function renderResult() {
+  progressFill.style.width = '100%';
+  progressLabel.textContent = `Terminé — ${questions.length} / ${questions.length}`;
+  const pct = Math.round((score / questions.length) * 100);
+  let msg = "";
+  if (pct >= 80) msg = "Excellent ! Tu sais lire le sens de variation d'une suite arithmétique.";
+  else if (pct >= 50) msg = "Bon travail, pense à regarder le signe de la raison r.";
+  else msg = "À revoir : r > 0 → croissante ; r < 0 → décroissante ; r = 0 → constante.";
+
+  let rowsHtml = "";
+  questions.forEach((item, i) => {
+    const ok = userAnswers[i].isCorrect;
+    rowsHtml += `
+      <div class="result-row ${ok ? 'ok' : 'ko'}">
+        <span class="mark">${ok ? '✓' : '✗'}</span>
+        <span>${item.q}${ok ? '' : ` — Réponse correcte : ${item.options[item.correct]}`}</span>
+      </div>`;
+  });
+
+  quizCard.innerHTML = `
+    <div class="result-card">
+      <div class="result-score">${score} / ${questions.length}</div>
+      <div class="result-msg">${msg}</div>
+      <div class="result-list">${rowsHtml}</div>
+      <button class="restart-btn" id="restartBtn">Recommencer le quiz</button>
+    </div>
+  `;
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    current = 0;
+    score = 0;
+    userAnswers.length = 0;
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
